@@ -24,7 +24,7 @@ COPY package*.json ./
 # Update npm (specific version to avoid issues)
 RUN npm install -g npm@7.24.0 \
     && npm cache clean --force \
-    && npm install --only=production --verbose || (cat /root/.npm/_logs/2024-07-14T07_40_49_488Z-debug-0.log && exit 1)
+    && npm install --only=production --verbose || (cat /root/.npm/_logs/2024-07-14T08_05_56_507Z-debug-0.log && exit 1)
 
 # Without grpc-health-probe binary image
 FROM base AS without-grpc-health-probe-bin
