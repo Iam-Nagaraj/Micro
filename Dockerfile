@@ -11,15 +11,15 @@ FROM mcr.microsoft.com/dotnet/runtime-deps:7.0.4-alpine3.16-amd64@sha256:7141eea
 
 WORKDIR /app
 COPY --from=builder /cartservice .
+
+# Download and install grpc_health_probe
+ENV GRPC_HEALTH_PROBE_VERSION=v0.4.18
+USER root
+RUN wget -qO /bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
+    chmod +x /bin/grpc_health_probe
+USER 1000
+
 EXPOSE 7070
 ENV DOTNET_EnableDiagnostics=0 \
     ASPNETCORE_URLS=http://*:7070
-USER 1000
 ENTRYPOINT ["/app/cartservice"]
-
-FROM without-grpc-health-probe-bin
-USER root
-ENV GRPC_HEALTH_PROBE_VERSION=v0.4.18
-RUN wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
-    chmod +x /bin/grpc_health_probe
-USER 1000
