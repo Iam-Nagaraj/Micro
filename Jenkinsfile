@@ -1,25 +1,28 @@
 pipeline {
     agent any
+
     stages {
-        stage('Build and Push Docker Image') {
+        stage('Build & Tag Docker Image') {
             steps {
                 script {
+                    dir('src') {
+
                     withDockerRegistry(credentialsId: '61c758e2-9104-4d96-a534-08ba44934a2e', toolName: 'docker') {
-                        try {
-                            sh "docker build -t cartservice ."
-                            sh "docker tag cartservice vnraj685093/cartservice:latest"
-                            sh "docker push vnraj685093/cartservice:latest"
-                        } catch (Exception err) {
-                            error "Failed to build or push Docker image: ${err}"
-                        }
+                        sh "docker build -t nagaraj/cartservice:latest ."
                     }
+                        }
                 }
             }
         }
-    }
-    post {
-        always {
-            cleanWs()
+        
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: '61c758e2-9104-4d96-a534-08ba44934a2e', toolName: 'docker') {
+                        sh "docker push nagaraj/cartservice:latest "
+                    }
+                }
+            }
         }
     }
 }
