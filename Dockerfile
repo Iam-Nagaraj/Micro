@@ -1,18 +1,18 @@
 # Base image
-FROM node:20.2.0-alpine@sha256:f25b0e9d3d116e267d4ff69a3a99c0f4cf6ae94eadd87f1bf7bd68ea3ff0bef7 AS base
+FROM node:20.2.0 AS base
 
 # Builder image
 FROM base AS builder
 
-# Install additional packages
-RUN apk add --update --no-cache \
+# Install additional packages required for building dependencies
+RUN yum install -y \
     python3 \
     make \
-    g++
+    gcc-c++
 
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
+# Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
 # Set npm proxy if needed
@@ -26,15 +26,19 @@ RUN npm install -g npm@7.24.0 \
     && npm cache clean --force \
     && npm install --only=production --verbose || (cat /root/.npm/_logs/2024-07-14T08_05_56_507Z-debug-0.log && exit 1)
 
-# Without grpc-health-probe binary image
+# Final image without grpc-health-probe binary
 FROM base AS without-grpc-health-probe-bin
 
 WORKDIR /usr/src/app
 
+# Copy the node_modules directory from the builder stage
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 
+# Copy application source code
 COPY . .
 
+# Expose port 7000 (adjust according to your application's needs)
 EXPOSE 7000
 
-ENTRYPOINT [ "node", "server.js" ]
+# Specify the command to run your application
+CMD ["node", "server.js"]
