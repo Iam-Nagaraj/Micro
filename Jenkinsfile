@@ -1,25 +1,25 @@
-pipeline { 
+pipeline {
     agent any
-
     stages {
-        stage('Build & Tag Docker Image') {
+        stage('Build and Push Docker Image') {
             steps {
                 script {
                     withDockerRegistry(credentialsId: '61c758e2-9104-4d96-a534-08ba44934a2e', toolName: 'docker') {
-                        sh "docker build -t nagaraj/shippingservice:latest ."
+                        try {
+                            sh "docker build -t shippingservice ."
+                            sh "docker tag shippingservice vnraj685093/shippingservice:latest"
+                            sh "docker push vnraj685093/shippingservice:latest"
+                        } catch (Exception err) {
+                            error "Failed to build or push Docker image: ${err}"
+                        }
                     }
                 }
             }
         }
-        
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    withDockerRegistry(credentialsId: '61c758e2-9104-4d96-a534-08ba44934a2e', toolName: 'docker') {
-                        sh "docker push nagaraj/shippingservice:latest "
-                    }
-                }
-            }
+    }
+    post {
+        always {
+            cleanWs()
         }
     }
 }
