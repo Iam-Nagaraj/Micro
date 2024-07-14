@@ -25,7 +25,7 @@ COPY package*.json ./
 # RUN npm config set https-proxy http://your.proxy.server:port
 
 # Update npm (specific version to avoid issues)
-RUN npm install -g npm@7.24.0 \
+# RUN npm install -g npm@7.24.0 \
     && npm cache clean --force \
     && npm install --only=production --verbose || (cat /root/.npm/_logs/2024-07-14T08_05_56_507Z-debug-0.log && exit 1)
 
