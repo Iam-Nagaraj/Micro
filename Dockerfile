@@ -1,5 +1,5 @@
 # Base image
-FROM node:20.2.0 AS base
+FROM registry.access.redhat.com/ubi8/ubi AS base
 
 # Builder image
 FROM base AS builder
@@ -15,7 +15,7 @@ WORKDIR /usr/src/app
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
-# Set npm proxy if needed
+# Set npm proxy if needed (uncomment and modify if necessary)
 # ENV HTTP_PROXY=http://your.proxy.server:port
 # ENV HTTPS_PROXY=http://your.proxy.server:port
 # RUN npm config set proxy http://your.proxy.server:port
