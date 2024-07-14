@@ -12,27 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM node:20.2.0-alpine@sha256:f25b0e9d3d116e267d4ff69a3a99c0f4cf6ae94eadd87f1bf7bd68ea3ff0bef7 as base
+# Use CentOS base image
+FROM centos:8 AS base
 
-FROM base as builder
-
-# Some packages (e.g. @google-cloud/profiler) require additional
-# deps for post-install scripts
-RUN apk add --update --no-cache \
+# Install necessary packages
+RUN yum install -y \
     python3 \
     make \
-    g++ 
+    gcc-c++
 
 WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-RUN npm install --only=production
+# Install Node.js and npm (assuming they are not already installed in the base CentOS image)
+RUN curl -fsSL https://rpm.nodesource.com/setup_16.x | bash - && \
+    yum install -y nodejs && \
+    npm install --only=production
 
-FROM base as without-grpc-health-probe-bin
+# Multi-stage build to reduce final image size
+FROM base AS without-grpc-health-probe-bin
 
 WORKDIR /usr/src/app
 
+# Copy node_modules from the builder stage
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 
 COPY . .
@@ -41,9 +44,9 @@ EXPOSE 50051
 
 ENTRYPOINT [ "node", "index.js" ]
 
-FROM without-grpc-health-probe-bin
+FROM without-grpc-health-probe-bin AS final
 
-# renovate: datasource=github-releases depName=grpc-ecosystem/grpc-health-probe
+# Install grpc_health_probe binary
 ENV GRPC_HEALTH_PROBE_VERSION=v0.4.18
-RUN wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
+RUN curl -fsSL https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 -o /bin/grpc_health_probe && \
     chmod +x /bin/grpc_health_probe
