@@ -9,7 +9,7 @@ pipeline {
         stage('Verify Checkout') {
             steps {
                 sh 'ls -la'
-                sh 'find . -name "cartservice.csproj"'
+                sh 'find . -name cartservice.csproj'
             }
         }
         stage('Build and Push Docker Image') {
