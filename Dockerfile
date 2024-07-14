@@ -21,10 +21,10 @@ COPY package*.json ./
 # RUN npm config set proxy http://your.proxy.server:port
 # RUN npm config set https-proxy http://your.proxy.server:port
 
-# Update npm (consider using a specific version instead of latest)
+# Update npm (specific version to avoid issues)
 RUN npm install -g npm@7.24.0 \
     && npm cache clean --force \
-    && npm install --only=production --verbose || (cat /root/.npm/_logs/2024-07-14T07_31_45_925Z-debug-0.log && exit 1)
+    && npm install --only=production --verbose || (cat /root/.npm/_logs/2024-07-14T07_40_49_488Z-debug-0.log && exit 1)
 
 # Without grpc-health-probe binary image
 FROM base AS without-grpc-health-probe-bin
