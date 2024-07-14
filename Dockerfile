@@ -1,21 +1,13 @@
-# Copyright 2020 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# Use RHEL base image
+# Base image
 FROM registry.access.redhat.com/ubi8/ubi AS base
 
-# Install necessary packages
+# Builder image
+FROM base AS builder
+
+# Install Node.js and npm
+RUN yum install -y nodejs npm
+
+# Install additional packages required for building dependencies
 RUN yum install -y \
     python3 \
     make \
@@ -23,30 +15,33 @@ RUN yum install -y \
 
 WORKDIR /usr/src/app
 
+# Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
 
-# Install Node.js and npm (assuming they are not already installed in the base RHEL image)
-RUN curl -fsSL https://rpm.nodesource.com/setup_16.x | bash - && \
-    yum install -y nodejs && \
-    npm install --only=production
+# Set npm proxy if needed (uncomment and modify if necessary)
+# ENV HTTP_PROXY=http://your.proxy.server:port
+# ENV HTTPS_PROXY=http://your.proxy.server:port
+# RUN npm config set proxy http://your.proxy.server:port
+# RUN npm config set https-proxy http://your.proxy.server:port
 
-# Multi-stage build to reduce final image size
+# Update npm (specific version to avoid issues)
+RUN npm install -g npm@7.24.0 \
+    && npm cache clean --force \
+    && npm install --only=production --verbose || (cat /root/.npm/_logs/2024-07-14T08_05_56_507Z-debug-0.log && exit 1)
+
+# Final image without grpc-health-probe binary
 FROM base AS without-grpc-health-probe-bin
 
 WORKDIR /usr/src/app
 
-# Copy node_modules from the builder stage
+# Copy the node_modules directory from the builder stage
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 
+# Copy application source code
 COPY . .
 
+# Expose port 50051 (adjust according to your application's needs)
 EXPOSE 50051
 
-ENTRYPOINT [ "node", "index.js" ]
-
-FROM without-grpc-health-probe-bin AS final
-
-# Install grpc_health_probe binary
-ENV GRPC_HEALTH_PROBE_VERSION=v0.4.18
-RUN curl -fsSL https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 -o /bin/grpc_health_probe && \
-    chmod +x /bin/grpc_health_probe
+# Specify the command to run your application
+CMD ["node", "server.js"]
