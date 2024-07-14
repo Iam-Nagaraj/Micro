@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Use CentOS base image
-FROM centos:8 AS base
+# Use RHEL base image
+FROM registry.access.redhat.com/ubi8/ubi AS base
 
 # Install necessary packages
 RUN yum install -y \
@@ -25,7 +25,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-# Install Node.js and npm (assuming they are not already installed in the base CentOS image)
+# Install Node.js and npm (assuming they are not already installed in the base RHEL image)
 RUN curl -fsSL https://rpm.nodesource.com/setup_16.x | bash - && \
     yum install -y nodejs && \
     npm install --only=production
