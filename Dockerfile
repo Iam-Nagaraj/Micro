@@ -4,6 +4,9 @@ FROM registry.access.redhat.com/ubi8/ubi AS base
 # Builder image
 FROM base AS builder
 
+# Install Node.js and npm
+RUN yum install -y nodejs npm
+
 # Install additional packages required for building dependencies
 RUN yum install -y \
     python3 \
